@@ -1,0 +1,185 @@
+<html>
+<head>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery.timers.min.js"></script>
+    <style>
+        body {
+            overflow:hidden;
+        }
+
+        #bg {
+            height: 100%;
+            width: 100%;
+            background-image: url(img/bg.png);
+            background-position: center center;
+            background-repeat:no-repeat;
+        }
+
+        .pic {
+            width: 640px;
+            height: 360px;
+            background-size: 640px 360px;
+            border: 10px solid white;
+            box-shadow: 3px 3px 30px 5px grey;
+            position: absolute;
+            background-image: url(img/1.png);
+            display: none;
+        }
+
+        #refresh {
+            background-image: url(img/refresh.png);
+            background-size: 50px 50px;
+            height: 50px;
+            width: 50px;
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            opacity: 0.15;
+        }
+        #refresh:hover{
+            opacity:1;
+        }
+    </style>
+    <script>
+        var w_height = window.innerHeight;
+        var w_width = window.innerWidth;
+        var bg_width;
+        var bg_height;
+        if (w_width * 103.0 / 192.0 > w_height) {
+            bg_height = w_height;
+            bg_width = bg_height * 192.0 / 103.0;
+        }
+        else {
+            bg_width = w_width;
+            bg_height = bg_width * 103.0 / 192.0;
+        }
+        var group = [];
+        $(document).ready(function () {
+            $("#bg").css("background-size", bg_width + "px " + bg_height + "px");
+            showPic();
+            $('body').everyTime('30s','timerA', function () {
+                picOut();
+                $("body").oneTime('2s', 'timerB', function () {
+                    showPic();
+                });
+            });
+            $("#refresh").on("click", function () {
+                $('body').stopTime("timerA");
+                $('body').stopTime("timerB");
+                $('body').stopTime("timerC");
+                picOut();
+                $("body").oneTime('2s', 'timerB', function () {
+                    showPic();
+                });
+                $('body').everyTime('30s', 'timerA', function () {
+                    picOut();
+                    $("body").oneTime('2s', 'timerB', function () {
+                        showPic();
+                    });
+                });
+            })
+            }
+        );
+        function picIn(n) {
+            if (n < 0)
+                return;
+            else {
+                $("#pic" + (group.length-n)).fadeIn(1000);
+                $('body').oneTime("1s", function () {
+                    picIn(n - 1);
+                }
+                );
+            }
+        }
+        function picOut() {
+            $(".pic").fadeOut(1000);
+            $('body').oneTime("1s", 'timerC', function () {
+                group = [];
+                $("#bg").empty();
+            });
+        }
+        function showPic() {
+            var insert = true;
+            while (insert == true) {
+                insert = insertPic(group);
+            }
+            console.log(group);
+            $.each(group, function (i, pic) {
+                var id = "pic" + i.toString();
+                var html = '<div class = "pic" id = "' + id + '"></div>';
+                $("#bg").append(html);
+                $("#" + id).css("left", (pic.x - 320) + "px");
+                $("#" + id).css("top", (pic.y - 180) + "px");
+                $("#" + id).css("background-image", "url(img/" + pic.i + ".jpg)");
+                $("#" + id).css("transform", "rotate(" + pic.d + "deg)");
+            });
+            picIn(group.length);
+        }
+
+        function getRandom(min, max) {
+            var i = Math.random();
+            return Math.floor((max - min) * i) + min;
+        }
+
+        function insertPic(pic_group) {
+            var newx;
+            var newy;
+            var newi;
+            var newd;
+            var v = true;
+            if (pic_group.length > 0)
+                for (t = 0; t < 100; t++) {
+                    v = true;
+                    newx = getRandom(300, w_width - 300);
+                    newy = getRandom(150, w_height - 150);
+                    for (i = 0; i < pic_group.length; i++) {
+                        if (Math.abs(pic_group[i].x - newx) > 480 || Math.abs(pic_group[i].y - newy) > 270) {
+                            continue;
+                        }
+                        else
+                            v = false;
+                    }
+                    if (v == true)
+                        break;
+                }
+            else {
+                newx = getRandom(300, w_width - 300);
+                newy = getRandom(150, w_height - 150);
+            }
+            if (v == true) {
+                if (pic_group.length > 0) {
+                    var vi = false;
+                    while (vi == false) {
+                        vi = true;
+                        newi = getRandom(1, 106);
+                        for (i = 0; i < pic_group.length; i++) {
+                            if (pic_group[i].i != newi)
+                                continue;
+                            else
+                                vi = false;
+                        }
+                    }
+                }
+                else
+                    newi = getRandom(1, 106);
+                newd = getRandom(-7, 7);
+                group.push(
+                    {
+                        x: newx,
+                        y: newy,
+                        i: newi,
+                        d: newd
+                    });
+                return true;
+            }
+            else
+                return false;
+        }
+    </script>
+</head>
+<body>
+    <div id="bg">
+    </div>
+    <div id="refresh"></div>
+</body>
+</html>
